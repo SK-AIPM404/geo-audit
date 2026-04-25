@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Brand {
+  id          String   @id @default(uuid())
+  name        String
+  website     String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories  Category[]
+  queries     Query[]
+  citations   Citation[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  queries     Query[]
+}
+
+model Query {
+  id          String   @id @default(uuid())
+  text        String
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  status      String   @default("pending") // pending, running, completed, failed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  citations   Citation[]
+}
+
+model Citation {
+  id            String   @id @default(uuid())
+  queryId       String
+  query         Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  aiEngine      String   // chatgpt, perplexity, gemini, claude
+  response      String   // full AI response text
+  brandMentioned Boolean @default(false)
+  brandPosition Int?     // position in response if mentioned (1-10)
+  competitors   String?  // JSON array of competitor names found
+  createdAt     DateTime @default(now())
+}
+
+model Competitor {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  website     String?
+  mentionCount Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
